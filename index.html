@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Climate Coach Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      /* background: #1c322d; */
+      margin: 0;
+      padding: 0;
+      background-image: url("bg.jpg");
+      background-size:cover;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, select, button, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      background: #007b5f;
+      color: white;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #005e47;
+    }
+    .chat {
+      margin-top: 30px;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background: #f7f7f7;
+    }
+    .chat p {
+      margin: 10px 0;
+    }
+    .user-msg { text-align: right; }
+    .ai-msg { text-align: left; color: #007b5f; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Smart Carbon Footprint Tracker</h2>
+    <form id="climateForm">
+      <label>Name:</label>
+      <input type="text" id="name" required />
+
+      <label>Email (optional):</label>
+      <input type="email" id="email" />
+
+      <label>Commute:</label>
+      <select id="commute">
+        <option>Car (alone)</option>
+        <option>Car (carpool)</option>
+        <option>Bike</option>
+        <option>Public transport</option>
+        <option>Walk</option>
+        <option>Work from home</option>
+      </select>
+
+      <label>Diet:</label>
+      <select id="diet">
+        <option>Non-vegetarian (daily meat)</option>
+        <option>Mixed (meat few times a week)</option>
+        <option>Vegetarian</option>
+        <option>Vegan</option>
+      </select>
+
+      <label>Monthly Electricity (kWh):</label>
+      <input type="number" id="electricity" required />
+
+      <label>Single-Use Plastic Usage:</label>
+      <select id="plastic">
+        <option>Frequently (almost daily)</option>
+        <option>Occasionally</option>
+        <option>Rarely</option>
+        <option>Never</option>
+      </select>
+
+      <label>Flights per Year:</label>
+      <select id="flights">
+        <option>0</option>
+        <option>1–2</option>
+        <option>3–5</option>
+        <option>More than 5</option>
+      </select>
+
+      <label>Would you like weekly tips?</label>
+      <select id="tips">
+        <option>Yes</option>
+        <option>No</option>
+      </select>
+
+      <button type="submit">Submit</button>
+    </form>
+
+    <div class="chat" id="chat"></div>
+    <form id="chatForm" style="display:none">
+      <textarea id="userInput" rows="2" placeholder="Type your message..."></textarea>
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script>
+    let sessionId = null;
+
+function addMessage(sender, message) {
+    const chat = document.getElementById("chat");
+    const p = document.createElement("p");
+    p.className = sender === "You" ? "user-msg" : "ai-msg";
+    p.textContent = `${sender}: ${message}`;
+    chat.appendChild(p);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  const form = document.getElementById("climateForm");
+  const chatForm = document.getElementById("chatForm");
+
+form.onsubmit = async (e) => {
+  e.preventDefault();
+  const formData = {
+    name: document.getElementById("name").value,
+    email: document.getElementById("email").value,
+    commute: document.getElementById("commute").value,
+    diet: document.getElementById("diet").value,
+    electricity: document.getElementById("electricity").value,
+    plastic: document.getElementById("plastic").value,
+    flights: document.getElementById("flights").value,
+    tips: document.getElementById("tips").value,
+  };
+
+  addMessage("Sparky", "Thinking...");
+
+  try {
+    const res = await fetch("http://localhost:5000/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+    const data = await res.json();
+    sessionId = data.session_id;
+    addMessage("Sparky", data.response);
+    chatForm.style.display = "block";
+  } catch (err) {
+    addMessage("Sparky", "Sorry, I couldn't connect to the AI.");
+  }
+};
+
+chatForm.onsubmit = async (e) => {
+  e.preventDefault();
+  const input = document.getElementById("userInput").value;
+  if (!input || !sessionId) return;
+  addMessage("You", input);
+  document.getElementById("userInput").value = "";
+
+  try {
+    const res = await fetch("http://localhost:5000/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sessionId, prompt: input }),
+    });
+    const data = await res.json();
+    addMessage("Sparky", data.response);
+  } catch (err) {
+    addMessage("Sparky", "Something went wrong while sending your message.");
+  }
+};
+  </script>
+</body>
+</html>
