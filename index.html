@@ -155,7 +155,7 @@ form.onsubmit = async (e) => {
   addMessage("Sparky", "Thinking...");
 
   try {
-    const res = await fetch("http://localhost:5000/start", {
+    const res = await fetch("https://ibm-carbon-footprint.onrender.com/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
@@ -177,7 +177,7 @@ chatForm.onsubmit = async (e) => {
   document.getElementById("userInput").value = "";
 
   try {
-    const res = await fetch("http://localhost:5000/chat", {
+    const res = await fetch("https://ibm-carbon-footprint.onrender.com/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ session_id: sessionId, prompt: input }),

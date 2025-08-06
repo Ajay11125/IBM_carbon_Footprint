@@ -13,6 +13,10 @@ from dotenv import load_dotenv
 app = Flask(__name__)
 CORS(app)
 
+port = int(os.environ.get("PORT", 5000))  # fallback to 5000 for local dev
+
+app.run(host="0.0.0.0", port=port)
+
 # Store LLM sessions by session ID
 llm_sessions = {}
 chat_histories = {}
