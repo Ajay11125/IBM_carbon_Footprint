@@ -7,15 +7,10 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 import uuid
 from dotenv import load_dotenv
-
-
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-CORS(app)
-
-port = int(os.environ.get("PORT", 5000))  # fallback to 5000 for local dev
-
-app.run(host="0.0.0.0", port=port)
+CORS(app) 
 
 # Store LLM sessions by session ID
 llm_sessions = {}
@@ -29,11 +24,14 @@ google_api_key = os.getenv("GOOGLE_API_KEY")
 llm = ChatGoogleGenerativeAI(
     model="gemini-1.5-flash-latest",
     temperature=0.7,
-    google_api_key=google_api_key  # ✅ this is the key part
+    google_api_key=google_api_key  
 )
 
-@app.route('/start', methods=['POST'])
+@app.route('/start', methods=['POST', 'OPTIONS'])
 def start_chat():
+    if request.method == 'OPTIONS':
+        return jsonify({'message': 'CORS preflight passed'}), 200
+
     data = request.get_json()
 
     # Collect and format data
@@ -100,3 +98,5 @@ def continue_chat():
 
 if __name__ == "__main__":
     app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
